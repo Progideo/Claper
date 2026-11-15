@@ -204,8 +204,14 @@ defmodule ClaperWeb.AdminLive.AdminShowTest do
   describe "user form" do
     setup [:register_and_log_in_admin]
 
-    test "renders first and last name fields", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/users/new")
+    test "opens the new user form from the users list", %{conn: conn} do
+      {:ok, users, _html} = live(conn, ~p"/admin/users")
+
+      {:ok, view, _html} =
+        users
+        |> element(~s(a[href="/admin/users/new"]), "New user")
+        |> render_click()
+        |> follow_redirect(conn, ~p"/admin/users/new")
 
       assert has_element?(view, "#user-form input[name='user[first_name]']")
       assert has_element?(view, "#user-form input[name='user[last_name]']")

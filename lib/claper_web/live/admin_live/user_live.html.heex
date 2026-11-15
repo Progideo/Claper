@@ -1,7 +1,12 @@
 <%= case @live_action do %>
   <% :index -> %>
     <div>
-      <h1 class="text-3xl font-bold mb-6">{gettext("Users")}</h1>
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-3xl font-bold">{gettext("Users")}</h1>
+        <.link navigate={~p"/admin/users/new"} class="btn btn-primary btn-sm">
+          {gettext("New user")}
+        </.link>
+      </div>
 
       <.form
         for={@form}
