@@ -25,10 +25,12 @@ defmodule ClaperWeb.EventLive.PresenterNeoProTest do
 
     assert has_element?(presenter, "#joinScreen.opacity-100 #qr[data-code=\"#{event.code}\"]")
     refute has_element?(presenter, "#presenter[data-goto-position]")
+    refute has_element?(presenter, "#presenter[data-goto-on-visible]")
     assert has_element?(presenter, "#presenter[data-join-only]")
     refute has_element?(presenter, "#presenter[phx-hook]")
     refute has_element?(presenter, "#slides img")
     render_hook(presenter, "goto", %{})
+    render_hook(presenter, "goto_visible", %{})
 
     assert presentation_state(presentation_file) == state
 

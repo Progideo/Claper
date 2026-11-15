@@ -94,6 +94,7 @@
   data-max-page={@event.presentation_file.length || 0}
   data-hash={@event.presentation_file.hash}
   data-goto-position={@goto_position}
+  data-goto-on-visible={if @iframe and is_integer(@goto_position), do: "true"}
   data-current-page={@state.position}
   data-embed-active={if @current_embed, do: "true", else: "false"}
 >

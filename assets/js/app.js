@@ -15,6 +15,7 @@ import "moment/locale/lv";
 import "moment/locale/ja";
 import QRCodeStyling from "qr-code-styling";
 import { Presenter } from "./presenter";
+import { watchSlideVisibility } from "./presenter_slide_visibility.mjs";
 import { Manager } from "./manager";
 import { AudioCapture } from "./audio_capture";
 import DateTimeLocal from "./date_time_local.mjs";
@@ -450,11 +451,24 @@ Hooks.UpdateAttendees = {
 Hooks.Presenter = {
   mounted() {
     this.presenter = new Presenter(this);
-    if (this.el.hasAttribute("data-goto-position")) this.pushEvent("goto", {});
+    if (this.el.hasAttribute("data-goto-on-visible") && window.self !== window.top) {
+      this.slideVisibility = watchSlideVisibility(this.el, event => this.pushEvent(event, {}));
+    } else if (this.el.hasAttribute("data-goto-position")) {
+      this.pushEvent("goto", {});
+    }
     this.presenter.init();
   },
   updated() {
     this.presenter.update();
+  },
+  disconnected() {
+    this.slideVisibility?.disconnected();
+  },
+  reconnected() {
+    this.slideVisibility?.reconnected();
+  },
+  destroyed() {
+    this.slideVisibility?.destroy();
   },
 };
 Hooks.Manager = {

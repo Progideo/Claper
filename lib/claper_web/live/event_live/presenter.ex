@@ -134,21 +134,35 @@ defmodule ClaperWeb.EventLive.Presenter do
         %{assigns: %{goto_position: position, goto_used: false}} = socket
       )
       when is_integer(position) do
+    {:noreply, apply_goto(socket, position)}
+  end
+
+  def handle_event(
+        "goto_visible",
+        _params,
+        %{assigns: %{iframe: true, goto_position: position}} = socket
+      )
+      when is_integer(position) do
+    {:noreply, apply_goto(socket, position)}
+  end
+
+  def handle_event(event, _params, socket) when event in ["goto", "goto_visible"],
+    do: {:noreply, socket}
+
+  defp apply_goto(socket, position) do
     %{event: event, state: state} = socket.assigns
     socket = assign(socket, goto_used: true, initial_iframe_position: nil)
 
     if leader?(socket, event) do
       case Presentations.change_page(event, state, position) do
-        {:ok, %{position: current}} when current == state.position -> {:noreply, socket}
-        {:ok, updated} -> {:noreply, assign_position(socket, updated)}
-        {:error, _} -> {:noreply, socket}
+        {:ok, %{position: current}} when current == state.position -> socket
+        {:ok, updated} -> assign_position(socket, updated)
+        {:error, _} -> socket
       end
     else
-      {:noreply, socket}
+      socket
     end
   end
-
-  def handle_event("goto", _params, socket), do: {:noreply, socket}
 
   defp leader?(%{assigns: %{current_user: current_user}} = _socket, event) do
     Claper.Events.led_by?(current_user.email, event) || event.user.id == current_user.id

@@ -45,6 +45,37 @@ The embedded QR screen uses the attendee URL and leaves the shared page and
 visibility settings alone. The `screen=join` option takes priority over `goto`
 when embedded.
 
+### Returning to a PowerPoint activity
+
+PowerPoint for Mac 16.112.4 kept the three diagnostic frames loaded between
+slides. Each measured return produced `visibilitychange` with a state of
+`visible`. Focus stayed false, intersection events appeared only on first
+display, and timer delays continued in hidden frames.
+
+An embedded presenter with a valid `goto` applies its position on first display
+and again on a hidden-to-visible transition. It waits 150 ms on return and checks
+that the presenter intersects the viewport before sending a single LiveView
+event. Hiding or disconnecting the frame cancels pending work. A reconnect
+retries only a pending activation while visible. The server uses the position
+from the URL, checks the current presenter permissions and broadcasts only if
+the shared position changes.
+
+This uses the existing PowerPoint URLs and add-in. It avoids reloading the
+content or using periodic requests from frames that PowerPoint keeps alive.
+Windows and PowerPoint for the web can report document visibility differently.
+If the host keeps an off-screen frame both visible and intersecting, these
+signals cannot distinguish it from the slide on screen. If a host does not emit
+visibility changes between slides, use the diagnostic journal before choosing
+an alternative signal from the add-in.
+
+To verify in PowerPoint, sign in as a presenter and open the same event as an
+attendee on another device or browser profile. Present slide 6 (`goto=0`),
+then slide 12 (`goto=1`), return to 6 and go to 12 again. The attendee should
+see positions 0 → 1 → 0 → 1. Rapidly skip past one activity, then stop on the
+other and confirm that the final question stays active. Open a `screen=join`
+slide and confirm that it shows the QR code without changing the attendee's
+question.
+
 ## Performance
 
 An embedded presenter loads the current slide, the Claper JavaScript and styles,
