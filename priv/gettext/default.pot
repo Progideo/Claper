@@ -4117,3 +4117,33 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "Switch account"
 msgstr ""
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "Detail"
+msgstr ""
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "Label"
+msgstr ""
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "NeoPro diagnostic log"
+msgstr ""
+
+#: lib/claper_web/plugs/neopro_diag/probe.html.heex
+#, elixir-autogen, elixir-format
+msgid "NeoPro slideshow diagnostics"
+msgstr ""
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "Signal"
+msgstr ""
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "UTC time"
+msgstr ""

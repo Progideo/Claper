@@ -258,6 +258,7 @@ config :claper, ClaperWeb.Endpoint,
   secure_cookie: secure_cookie
 
 config :claper,
+  neopro_diag_token: get_var_from_path_or_env(config_dir, "NEOPRO_DIAG_TOKEN"),
   enable_account_creation: enable_account_creation,
   email_confirmation: email_confirmation,
   allow_unlink_external_provider: allow_unlink_external_provider,

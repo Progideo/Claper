@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{gettext("NeoPro slideshow diagnostics")}</title>
+    <style>
+      body { margin: 0; padding: 20px; background: #0b2545; color: white; font: 16px system-ui, sans-serif; }
+      header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 18px; }
+      h1 { margin: 0; font-size: 2.5rem; }
+      #clock { font-size: 1.5rem; color: #fdc500; font-variant-numeric: tabular-nums; }
+      #status { margin: 10px 0; }
+      #status[data-http-status]::after { content: " (" attr(data-http-status) ")"; color: #fdc500; }
+      ol { margin: 0; padding: 0; list-style: none; font-family: monospace; font-size: 1rem; }
+      li { padding: 6px 0; border-top: solid 1px #416180; overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body data-label={@label}>
+    <header>
+      <h1>{@label}</h1>
+      <time id="clock"></time>
+    </header>
+    <p id="status">{gettext("NeoPro slideshow diagnostics")}</p>
+    <ol id="observations"></ol>
+    <script nonce={@nonce}>
+      const label = document.body.dataset.label;
+      const token = new URL(location.href).searchParams.get("token");
+      const instance = Math.random().toString(36).slice(2, 10);
+      const clock = document.getElementById("clock");
+      const observations = document.getElementById("observations");
+      const status = document.getElementById("status");
+      const clockTime = () => new Date().toISOString().slice(11, 23);
+      const state = () => "visibility=" + document.visibilityState + " focus=" + document.hasFocus();
+
+      function report(signal, detail) {
+        const entry = document.createElement("li");
+        const boundedDetail = (instance + " " + detail).slice(0, 240);
+        entry.textContent = clockTime() + " " + signal + " " + boundedDetail;
+        observations.prepend(entry);
+        if (observations.children.length > 40) observations.lastElementChild.remove();
+
+        fetch("/neopro/diag/events", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + token, "Content-Type": "text/plain" },
+          body: JSON.stringify({ label, signal, detail: boundedDetail }),
+          credentials: "omit",
+          keepalive: true
+        }).then(response => {
+          if (!response.ok) status.dataset.httpStatus = response.status;
+        }).catch(() => {
+          status.dataset.httpStatus = "offline";
+        });
+      }
+
+      document.addEventListener("visibilitychange", () => report("visibilitychange", state()));
+      for (const signal of ["focus", "blur"]) {
+        window.addEventListener(signal, () => report(signal, state()));
+      }
+      for (const signal of ["pageshow", "pagehide"]) {
+        window.addEventListener(signal, event => report(signal, state() + " persisted=" + event.persisted));
+      }
+      for (const signal of ["freeze", "resume"]) {
+        document.addEventListener(signal, () => report(signal, state()));
+      }
+
+      const size = (width, height) => Math.round(width) + "x" + Math.round(height);
+      window.addEventListener("resize", () => report("resize", size(innerWidth, innerHeight)));
+      if (typeof ResizeObserver === "function") {
+        new ResizeObserver(([entry]) => {
+          report("resize-observer", size(entry.contentRect.width, entry.contentRect.height));
+        }).observe(document.documentElement);
+      }
+
+      if (typeof IntersectionObserver === "function") {
+        new IntersectionObserver(([entry]) => {
+          report("intersection", "intersecting=" + entry.isIntersecting + " ratio=" + entry.intersectionRatio.toFixed(3));
+        }, { threshold: [0, 0.01, 0.5, 1] }).observe(clock);
+      }
+
+      let previousFrame;
+      requestAnimationFrame(function frame(now) {
+        if (previousFrame !== undefined && now - previousFrame > 1000) {
+          report("animation-resumed", Math.round(now - previousFrame) + " ms; " + state());
+        }
+        previousFrame = now;
+        requestAnimationFrame(frame);
+      });
+
+      const interval = 500;
+      let lastTick = performance.now();
+      clock.textContent = clockTime() + " UTC";
+      setInterval(() => {
+        const now = performance.now();
+        const delay = now - lastTick - interval;
+        clock.textContent = clockTime() + " UTC";
+        if (delay > 250) {
+          report("interval-lag", "+" + Math.round(delay) + " ms; " + state());
+        }
+        lastTick = now;
+      }, interval);
+
+      function messageShape(data) {
+        if (data === null) return "null";
+        if (Array.isArray(data)) return "array; items=" + data.length;
+        let object = data;
+        let shape = typeof data;
+        if (typeof data === "string") {
+          shape += "; length=" + data.length;
+          if (data.length <= 2048) {
+            try { object = JSON.parse(data); } catch (_) { /* Not JSON. */ }
+          }
+        }
+        if (object && typeof object === "object") {
+          for (const key of ["type", "eventName", "messageType", "action", "event"]) {
+            const value = object[key];
+            if (typeof value === "string" && /^[A-Za-z][A-Za-z0-9_.:-]{0,47}$/.test(value)) {
+              return shape + "; " + key + "=" + value;
+            }
+          }
+        }
+        return shape;
+      }
+
+      window.addEventListener("message", event => {
+        const origin = (event.origin || "(empty)").replace(/[^ -~]/g, "?").slice(0, 120);
+        const sender = event.source === window.parent ? "parent" : event.source === window.top ? "top" : "other";
+        report("message", "origin=" + origin + "; source=" + sender + "; " + messageShape(event.data));
+      });
+
+      report("start", state() + " viewport=" + size(innerWidth, innerHeight));
+    </script>
+  </body>
+</html>

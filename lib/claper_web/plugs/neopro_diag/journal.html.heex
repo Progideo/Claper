@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{gettext("NeoPro diagnostic log")}</title>
+    <style>
+      body { margin: 24px; font: 16px system-ui, sans-serif; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { padding: 8px; border-bottom: 1px solid #d6dfe9; text-align: left; overflow-wrap: anywhere; }
+      time { font-variant-numeric: tabular-nums; white-space: nowrap; }
+      td { vertical-align: top; }
+    </style>
+  </head>
+  <body>
+    <h1>{gettext("NeoPro diagnostic log")}</h1>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">{gettext("UTC time")}</th>
+          <th scope="col">{gettext("Label")}</th>
+          <th scope="col">{gettext("Signal")}</th>
+          <th scope="col">{gettext("Detail")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr :for={event <- @events}>
+          <td><time>{DateTime.to_iso8601(event.at, :extended)}</time></td>
+          <td>{event.label}</td>
+          <td>{event.signal}</td>
+          <td>{event.detail}</td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

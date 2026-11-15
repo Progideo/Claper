@@ -4125,3 +4125,33 @@ msgstr "Compte connecté : %{email}"
 #, elixir-autogen, elixir-format, fuzzy
 msgid "Switch account"
 msgstr "Changer de compte"
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "Detail"
+msgstr "Détail"
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "Label"
+msgstr "Libellé"
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "NeoPro diagnostic log"
+msgstr "Journal de diagnostic NeoPro"
+
+#: lib/claper_web/plugs/neopro_diag/probe.html.heex
+#, elixir-autogen, elixir-format
+msgid "NeoPro slideshow diagnostics"
+msgstr "Diagnostic du diaporama NeoPro"
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "Signal"
+msgstr "Signal"
+
+#: lib/claper_web/plugs/neopro_diag/journal.html.heex
+#, elixir-autogen, elixir-format
+msgid "UTC time"
+msgstr "Heure UTC"

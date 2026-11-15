@@ -21,6 +21,7 @@ defmodule Claper.Application do
       {Phoenix.PubSub, name: Claper.PubSub},
       # Start the rate limiter before the endpoint accepts requests
       Claper.RateLimit,
+      if(Claper.NeoProDiagnostics.token(), do: Claper.NeoProDiagnostics),
       # Start the Endpoint (http/https)
       ClaperWeb.Presence,
       ClaperWeb.Endpoint,
@@ -39,7 +40,7 @@ defmodule Claper.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Claper.Supervisor]
 
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(Enum.reject(children, &is_nil/1), opts)
   end
 
   # Tell Phoenix to update the endpoint configuration
