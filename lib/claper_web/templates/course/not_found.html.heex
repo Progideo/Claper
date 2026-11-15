@@ -1,8 +1,10 @@
 <main class="mx-auto max-w-lg p-6">
   <h1 class="text-xl font-semibold">
-    {gettext("No active event for %{course}", course: @course)}
+    {gettext("No active session is shared with this account for %{course}", course: @course)}
   </h1>
   <p class="mt-3">
-    {gettext("Duplicate the event template for this course in Claper, then reopen this page.")}
+    {gettext(
+      "Ask for a copy of the course event template and have this account added as a facilitator."
+    )}
   </p>
 </main>

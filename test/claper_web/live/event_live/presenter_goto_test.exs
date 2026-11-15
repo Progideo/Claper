@@ -2,7 +2,7 @@ defmodule ClaperWeb.EventLive.PresenterGotoTest do
   use ClaperWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import Claper.{AccountsFixtures, PollsFixtures, PresentationsFixtures}
+  import Claper.{AccountsFixtures, EventsFixtures, PollsFixtures, PresentationsFixtures}
 
   alias Claper.Presentations
 
@@ -42,6 +42,29 @@ defmodule ClaperWeb.EventLive.PresenterGotoTest do
     render_hook(presenter, "goto", %{})
     assert position(presentation_file) == 0
     refute_received {:page_changed, 1}
+  end
+
+  test "a facilitator can open the manager and use goto to update connected attendees", %{
+    event: event,
+    presentation_file: presentation_file
+  } do
+    facilitator = user_fixture()
+    activity_leader_fixture(%{event: event, user: facilitator})
+    conn = log_in_user(build_conn(), facilitator)
+
+    Phoenix.PubSub.subscribe(Claper.PubSub, "event:#{event.uuid}")
+    Presentations.subscribe(presentation_file.id)
+    {:ok, _manager, _html} = live(conn, ~p"/e/#{event.code}/manage")
+    {:ok, attendee, _html} = live(build_conn(), ~p"/e/#{event.code}")
+    {:ok, presenter, _html} = live(conn, ~p"/e/#{event.code}/presenter?iframe=1&goto=1")
+
+    assert position(presentation_file) == 0
+    render_hook(presenter, "goto", %{})
+    assert position(presentation_file) == 1
+    assert_receive {:page_changed, 1}
+    assert_receive {:state_updated, %{position: 1}}
+    assert render(attendee) =~ "Second question"
+    assert has_element?(presenter, "#poll.opacity-100", "Second question")
   end
 
   test "does not broadcast for the current position, missing values, or invalid values",

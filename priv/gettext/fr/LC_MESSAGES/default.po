@@ -4113,11 +4113,10 @@ msgstr[2] "Cet événement se termine automatiquement après %{count} jours sans
 
 #: lib/claper_web/templates/course/not_found.html.heex
 #, elixir-autogen, elixir-format
-msgid "No active event for %{course}"
-msgstr "Aucun événement actif pour %{course}"
-
+msgid "Ask for a copy of the course event template and have this account added as a facilitator."
+msgstr "Demandez une copie de l’événement modèle de la formation et faites ajouter ce compte comme co-animateur."
 
 #: lib/claper_web/templates/course/not_found.html.heex
 #, elixir-autogen, elixir-format
-msgid "Duplicate the event template for this course in Claper, then reopen this page."
-msgstr "Dupliquez l’événement modèle de cette formation dans Claper, puis rouvrez cette page."
+msgid "No active session is shared with this account for %{course}"
+msgstr "Aucune session active n’est partagée avec ce compte pour la formation %{course}"

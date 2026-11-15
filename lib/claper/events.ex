@@ -77,12 +77,26 @@ defmodule Claper.Events do
     |> String.trim("-")
   end
 
-  def find_course_event(_user_id, ""), do: nil
+  @doc "Returns the newest unexpired course session owned or facilitated by the user."
+  def find_course_event(_user, ""), do: nil
 
-  def find_course_event(user_id, course) do
-    user_id
-    |> list_not_expired_events()
-    |> Enum.find(&String.starts_with?(course_slug(&1.name), course))
+  def find_course_event(%Accounts.User{id: user_id, email: email}, course) do
+    facilitator =
+      from(a in ActivityLeader,
+        where: a.event_id == parent_as(:event).id and a.email == ^email
+      )
+
+    from(e in Event,
+      as: :event,
+      where: is_nil(e.expired_at) and not is_nil(e.name),
+      where: e.user_id == ^user_id or exists(facilitator),
+      order_by: [desc: e.started_at, desc: e.inserted_at, desc: e.id]
+    )
+    |> Repo.all()
+    |> Enum.find(fn event ->
+      slug = course_slug(event.name)
+      slug != course and String.starts_with?(slug, course)
+    end)
   end
 
   @doc """

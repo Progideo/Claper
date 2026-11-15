@@ -7,7 +7,7 @@ defmodule ClaperWeb.CourseController do
   def manage(conn, %{"course" => course}), do: resolve(conn, course, :manage)
 
   defp resolve(conn, course, destination) do
-    case Events.find_course_event(conn.assigns.current_user.id, course) do
+    case Events.find_course_event(conn.assigns.current_user, course) do
       nil ->
         conn
         |> put_layout(false)

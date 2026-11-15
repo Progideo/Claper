@@ -20,13 +20,26 @@ Replace `claper.example.org` with the Claper host and `CODE` with an event code.
 | Open the manager for the same course | `https://claper.example.org/c/istqb-ctal-testeur-agile-v2-0/manage` |
 | Show the course event's QR code | `https://claper.example.org/c/istqb-ctal-testeur-agile-v2-0/presenter?iframe=1&screen=join` |
 
-Duplicate the course event template under the trainer's own account before using
-a course URL. The newest unexpired event owned by the signed-in trainer wins.
-The course segment is a lowercase, accent-free form of the catalog name with
-punctuation and whitespace collapsed to hyphens. The normalized event name must
-start with that segment. Claper's ` (Copy)` suffix works with this rule.
-Keep the catalog name short enough for Claper to retain it when duplicating the
-event. Use distinct course prefixes where courses can overlap.
+## Prepare a shared session
+
+1. Keep the template named exactly like the catalog course, for example
+   `ISTQB CTAL Testeur Agile v2.0`. The course URL segment is the lowercase,
+   accent-free catalog name with punctuation and whitespace collapsed to hyphens.
+2. From the template owner's account, duplicate the template for each session.
+   Keep Claper's ` (Copy)` suffix or use a session suffix, for example
+   `ISTQB CTAL Testeur Agile v2.0 – Lyon 20/11`. Keep the catalog name short
+   enough for Claper to retain it on duplication.
+3. In the copy's event settings, add the trainer as a facilitator with the
+   email address on their Claper account. Assign each trainer to their own copy
+   for concurrent sessions.
+4. The trainer signs in with their own account and opens the PowerPoint.
+
+Course URLs consider unexpired events owned or facilitated by the signed-in
+user. The normalized event name must start with the course segment. An exact
+match identifies the template and is excluded, even for its owner. Use distinct
+course prefixes where courses can overlap. When several sessions match, Claper
+selects the latest `started_at`, then the latest `inserted_at`, then the
+highest event ID if both timestamps are equal.
 
 The embedded QR screen uses the attendee URL and leaves the shared page and
 visibility settings alone. The `screen=join` option takes priority over `goto`
@@ -54,8 +67,9 @@ git push origin refs/tags/v3.3.0-neopro.1
 
 Fetch an upstream release tag from `https://github.com/ClaperCo/Claper.git`.
 Create an update branch from that tag and replay the NeoPro commits in order.
-Review changes to event access and session return URLs, presentation state and
-both PubSub messages, LiveView hook lifecycle, and presenter markup and styling.
+Review facilitator permissions, course-session resolution and session return
+URLs, presentation state and both PubSub messages, the LiveView hook lifecycle,
+and presenter markup and styling.
 Run `mix format --check-formatted`, `mix test` on a disposable test database and
 `docker build`. Check an embedded question, a socket reconnect, the QR code and
 the standard presenter in PowerPoint or a browser before tagging the image.
