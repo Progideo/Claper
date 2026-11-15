@@ -4115,3 +4115,13 @@ msgstr "Demandez une copie de l’événement modèle de la formation et faites 
 #, elixir-autogen, elixir-format
 msgid "No active session is shared with this account for %{course}"
 msgstr "Aucune session active n’est partagée avec ce compte pour la formation %{course}"
+
+#: lib/claper_web/templates/course/not_found.html.heex
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Signed in as %{email}"
+msgstr "Compte connecté : %{email}"
+
+#: lib/claper_web/templates/course/not_found.html.heex
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Switch account"
+msgstr "Changer de compte"

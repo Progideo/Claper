@@ -2,17 +2,26 @@ defmodule ClaperWeb.CourseController do
   use ClaperWeb, :controller
 
   alias Claper.Events
+  alias ClaperWeb.UserAuth
 
   def presenter(conn, %{"course" => course}), do: resolve(conn, course, :presenter)
   def manage(conn, %{"course" => course}), do: resolve(conn, course, :manage)
 
+  def switch_account(conn, _params), do: UserAuth.switch_account(conn, current_path(conn))
+
   defp resolve(conn, course, destination) do
-    case Events.find_course_event(conn.assigns.current_user, course) do
+    user = conn.assigns.current_user
+
+    case Events.find_course_event(user, course) do
       nil ->
         conn
         |> put_layout(false)
         |> put_status(:not_found)
-        |> render("not_found.html", course: course)
+        |> render("not_found.html",
+          course: course,
+          email: user.email,
+          switch_path: current_path(conn)
+        )
 
       event ->
         path =

@@ -4115,3 +4115,13 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "No active session is shared with this account for %{course}"
 msgstr ""
+
+#: lib/claper_web/templates/course/not_found.html.heex
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Signed in as %{email}"
+msgstr ""
+
+#: lib/claper_web/templates/course/not_found.html.heex
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Switch account"
+msgstr ""

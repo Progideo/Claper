@@ -83,7 +83,20 @@ defmodule ClaperWeb.UserAuth do
   It clears all session data for safety. See renew_session.
   """
   def log_out_user(conn) do
-    logout_redirect_url = Application.get_env(:claper, :logout_redirect_url)
+    conn
+    |> clear_user_session()
+    |> custom_logout_redirect(Application.get_env(:claper, :logout_redirect_url))
+  end
+
+  @doc "Clears the current account and keeps the course URL for the next sign-in."
+  def switch_account(conn, course_path) do
+    conn
+    |> clear_user_session()
+    |> put_session(:user_return_to, course_path)
+    |> redirect(to: ~p"/users/log_in")
+  end
+
+  defp clear_user_session(conn) do
     user_token = get_session(conn, :user_token)
     user_token && Accounts.delete_session_token(user_token)
 
@@ -99,7 +112,6 @@ defmodule ClaperWeb.UserAuth do
     conn
     |> renew_session()
     |> delete_resp_cookie(@remember_me_cookie)
-    |> custom_logout_redirect(logout_redirect_url)
   end
 
   defp custom_logout_redirect(conn, nil), do: conn |> redirect(to: "/")

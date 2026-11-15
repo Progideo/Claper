@@ -98,6 +98,8 @@ defmodule ClaperWeb.Router do
 
     get("/c/:course/presenter", CourseController, :presenter)
     get("/c/:course/manage", CourseController, :manage)
+    post("/c/:course/presenter", CourseController, :switch_account)
+    post("/c/:course/manage", CourseController, :switch_account)
   end
 
   live_session :presenter, on_mount: ClaperWeb.UserLiveAuth do

@@ -119,6 +119,38 @@ defmodule ClaperWeb.CourseControllerTest do
     assert get_resp_header(response, "location") == []
   end
 
+  test "switches accounts and returns to the exact course URL after signing in", %{
+    conn: conn,
+    user: user
+  } do
+    second_user = confirmed_user_fixture()
+    event = event_fixture(%{name: "Formation Agile (Copy)", user: second_user})
+    path = ~p"/c/formation-agile/presenter" <> "?iframe=1&goto=2&tag=x%20y&tag=z"
+    token = get_session(conn, :user_token)
+
+    response = get(conn, path)
+    html = html_response(response, 404)
+    assert html =~ user.email
+    assert html =~ "Switch account"
+    assert Floki.attribute(Floki.parse_document!(html), "form[method=post]", "action") == [path]
+
+    switched = post(recycle(response), path, %{"return_to" => "https://example.org/"})
+    assert redirected_to(switched) == ~p"/users/log_in"
+    assert get_session(switched, :user_return_to) == path
+    refute get_session(switched, :user_token)
+    refute Claper.Accounts.get_user_by_session_token(token)
+
+    logged_in =
+      post(recycle(switched), ~p"/users/log_in", %{
+        "user" => %{"email" => second_user.email, "password" => valid_user_password()}
+      })
+
+    assert redirected_to(logged_in) == path
+
+    assert redirected_to(get(recycle(logged_in), path)) ==
+             ~p"/e/#{event.code}/presenter" <> "?iframe=1&goto=2&tag=x%20y&tag=z"
+  end
+
   test "returns to the requested course path and query after login", %{user: user} do
     event = event_fixture(%{name: "Formation Agile (Copy)"})
     activity_leader_fixture(%{event: event, user: user})

@@ -7,4 +7,10 @@
       "Ask for a copy of the course event template and have this account added as a facilitator."
     )}
   </p>
+  <p class="mt-4 break-all">
+    {gettext("Signed in as %{email}", email: @email)}
+  </p>
+  <.form for={%{}} action={@switch_path} method="post" class="mt-2">
+    <button type="submit" class="link link-primary">{gettext("Switch account")}</button>
+  </.form>
 </main>
