@@ -1,6 +1,8 @@
 defmodule ClaperWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :claper
 
+  @immutable_cache "public, max-age=31536000, immutable"
+
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
@@ -31,8 +33,12 @@ defmodule ClaperWeb.Endpoint do
   plug Plug.Static,
     at: "/",
     from: :claper,
-    gzip: false,
+    gzip: true,
+    brotli: true,
+    cache_control_for_vsn_requests: @immutable_cache,
     only: ClaperWeb.static_paths()
+
+  plug :cache_slide_images
 
   plug Plug.Static,
     at: "/uploads",
@@ -70,6 +76,26 @@ defmodule ClaperWeb.Endpoint do
     headers: {Application, :get_env, [:claper, :remote_ip_headers, []]}
 
   plug ClaperWeb.Router
+
+  defp cache_slide_images(
+         %Plug.Conn{method: method, path_info: ["uploads", _hash, name]} = conn,
+         _opts
+       )
+       when method in ["GET", "HEAD"] do
+    if Regex.match?(~r/\A[0-9]+\.jpg\z/, name) do
+      Plug.Conn.register_before_send(conn, fn
+        %Plug.Conn{status: status} = conn when status in [200, 206, 304] ->
+          Plug.Conn.put_resp_header(conn, "cache-control", @immutable_cache)
+
+        conn ->
+          conn
+      end)
+    else
+      conn
+    end
+  end
+
+  defp cache_slide_images(conn, _opts), do: conn
 
   def runtime_session(conn, _opts) do
     Plug.run(conn, [{Plug.Session, runtime_opts()}])

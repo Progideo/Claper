@@ -31,6 +31,7 @@ FROM ${BUILDER_IMAGE} AS builder
 
 RUN apt-get update && apt-get install -y \
     build-essential \
+    brotli \
     git \
     curl \
     bash \
@@ -83,7 +84,10 @@ RUN mix compile
 
 COPY assets assets
 
-RUN mix assets.deploy
+RUN mix assets.deploy \
+  && find priv/static/assets priv/static/fonts -type f \
+    \( -name '*.js' -o -name '*.css' -o -name '*.ttf' \) \
+    -exec brotli --quality=5 -- {} +
 
 COPY config/runtime.exs config/
 
