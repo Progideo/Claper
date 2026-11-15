@@ -1183,8 +1183,11 @@ defmodule ClaperWeb.EventLiveTest do
       assert html =~ "Join the event"
       assert html =~ "Enter the code shared by the presenter"
       assert html =~ "Are you a presenter?"
-      assert html =~ "Start creating for free"
+      refute html =~ "Start creating for free"
       refute html =~ "Turn your slides into conversations"
+
+      assert has_element?(join_live, "#menu a[href='/users/log_in']", "Log in")
+      assert has_element?(join_live, "span + a[href='/users/log_in']", "Log in")
 
       assert has_element?(join_live, "#form")
       assert has_element?(join_live, "#input[placeholder='ABCD1234']")

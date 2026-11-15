@@ -2189,11 +2189,6 @@ msgstr "新しい質問から表示"
 msgid "Sort by:"
 msgstr "並び替え："
 
-#: lib/claper_web/live/event_live/join.html.heex
-#, elixir-autogen, elixir-format
-msgid "Start creating for free"
-msgstr "無料ではじめる"
-
 #: lib/claper_web/live/event_live/manage_floating_action_bar.ex
 #: lib/claper_web/live/event_live/manage_interaction_list_component.ex
 #, elixir-autogen, elixir-format

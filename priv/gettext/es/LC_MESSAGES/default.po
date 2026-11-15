@@ -2190,11 +2190,6 @@ msgstr "Mostrar primero las preguntas más recientes"
 msgid "Sort by:"
 msgstr "Ordenar por:"
 
-#: lib/claper_web/live/event_live/join.html.heex
-#, elixir-autogen, elixir-format
-msgid "Start creating for free"
-msgstr "Empieza a crear gratis"
-
 #: lib/claper_web/live/event_live/manage_floating_action_bar.ex
 #: lib/claper_web/live/event_live/manage_interaction_list_component.ex
 #, elixir-autogen, elixir-format

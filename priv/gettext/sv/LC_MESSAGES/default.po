@@ -2226,11 +2226,6 @@ msgstr "Visa nyaste frågor först"
 msgid "Sort by:"
 msgstr "Sortera efter:"
 
-#: lib/claper_web/live/event_live/join.html.heex
-#, elixir-autogen, elixir-format
-msgid "Start creating for free"
-msgstr "Börja skapa gratis"
-
 #: lib/claper_web/live/event_live/manage_floating_action_bar.ex
 #: lib/claper_web/live/event_live/manage_interaction_list_component.ex
 #, elixir-autogen, elixir-format

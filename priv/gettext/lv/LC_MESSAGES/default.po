@@ -2194,11 +2194,6 @@ msgstr "Vispirms rādīt jaunākos jautājumus"
 msgid "Sort by:"
 msgstr "Kārtot pēc:"
 
-#: lib/claper_web/live/event_live/join.html.heex
-#, elixir-autogen, elixir-format
-msgid "Start creating for free"
-msgstr "Sāciet veidot bez maksas"
-
 #: lib/claper_web/live/event_live/manage_floating_action_bar.ex
 #: lib/claper_web/live/event_live/manage_interaction_list_component.ex
 #, elixir-autogen, elixir-format
