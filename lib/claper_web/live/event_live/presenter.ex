@@ -62,11 +62,7 @@ defmodule ClaperWeb.EventLive.Presenter do
         |> assign(:event, event)
         |> assign(:iframe, iframe)
         |> assign(:join_only, join_only)
-        |> assign(
-          :goto_position,
-          if(join_only, do: nil, else: goto_position(params["goto"], event))
-        )
-        |> assign(:goto_used, false)
+        |> assign_goto(params["goto"], event)
         |> assign(:state, event.presentation_file.presentation_state)
         |> assign(:posts, list_posts(socket, event.uuid))
         |> assign(:pinned_posts, list_pinned_posts(socket, event.uuid))
@@ -101,6 +97,23 @@ defmodule ClaperWeb.EventLive.Presenter do
     """
   end
 
+  defp assign_goto(socket, value, event) do
+    goto = if socket.assigns.join_only, do: nil, else: goto_position(value, event)
+    first_mount = get_connect_params(socket)["_mounts"] in [nil, 0]
+
+    assign(socket,
+      goto_position: goto,
+      initial_iframe_position: if(socket.assigns.iframe and first_mount, do: goto),
+      goto_used: false
+    )
+  end
+
+  defp iframe_slide_url(presentation, position) when is_integer(position) and position >= 0 do
+    presentation |> Presentations.get_slide_urls() |> Enum.at(position)
+  end
+
+  defp iframe_slide_url(_, _), do: nil
+
   defp goto_position(value, event) when is_binary(value) and byte_size(value) <= 10 do
     with {position, ""} when position >= 0 and position <= 2_147_483_647 <- Integer.parse(value),
          true <-
@@ -122,7 +135,7 @@ defmodule ClaperWeb.EventLive.Presenter do
       )
       when is_integer(position) do
     %{event: event, state: state} = socket.assigns
-    socket = assign(socket, :goto_used, true)
+    socket = assign(socket, goto_used: true, initial_iframe_position: nil)
 
     if leader?(socket, event) do
       case Presentations.change_page(event, state, position) do

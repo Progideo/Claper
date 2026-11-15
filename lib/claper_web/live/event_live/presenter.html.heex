@@ -203,6 +203,7 @@
   </div>
   <!-- MESSAGES -->
   <div
+    :if={!@join_only}
     id="slider-wrapper"
     class={"w-full min-h-screen grid #{if (@state.chat_visible && (@event.presentation_file.length || 0) > 0) || (@current_embed && (@event.presentation_file.length || 0) == 0), do: "grid-cols-[1fr_10px_1fr]", else: "grid-cols-[1fr]"} items-center justify-center relative bg-black"}
     phx-hook="Split"
@@ -343,17 +344,28 @@
           />
         </div>
       <% end %>
-      <div
-        class={"#{if @current_embed, do: "hidden", else: ""} text-center"}
-        id="slider"
-        phx-update="ignore"
-      >
-        <img
-          :for={src <- Presentations.get_slide_urls(@event.presentation_file)}
-          src={src}
-          class="max-h-screen w-auto!"
-        />
-      </div>
+      <%= if @iframe do %>
+        <% src =
+          iframe_slide_url(
+            @event.presentation_file,
+            @initial_iframe_position || @state.position
+          ) %>
+        <div class={[if(@current_embed, do: "hidden"), "text-center"]}>
+          <img :if={src} id="current-slide" src={src} class="max-h-screen w-auto!" />
+        </div>
+      <% else %>
+        <div
+          class={"#{if @current_embed, do: "hidden", else: ""} text-center"}
+          id="slider"
+          phx-update="ignore"
+        >
+          <img
+            :for={src <- Presentations.get_slide_urls(@event.presentation_file)}
+            src={src}
+            class="max-h-screen w-auto!"
+          />
+        </div>
+      <% end %>
     </div>
   </div>
   <div

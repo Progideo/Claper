@@ -9,20 +9,23 @@ export class Presenter {
   }
 
   init(refresh = false) {
-    this.slider = tns({
-      container: "#slider",
-      items: 1,
-      mode: "gallery",
-      slideBy: "page",
-      center: true,
-      autoplay: false,
-      controls: false,
-      swipeAngle: false,
-      startIndex: this.currentPage,
-      speed: 0,
-      loop: false,
-      nav: false,
-    });
+    const container = document.getElementById("slider");
+    if (container) {
+      this.slider = tns({
+        container,
+        items: 1,
+        mode: "gallery",
+        slideBy: "page",
+        center: true,
+        autoplay: false,
+        controls: false,
+        swipeAngle: false,
+        startIndex: this.currentPage,
+        speed: 0,
+        loop: false,
+        nav: false,
+      });
+    }
 
     if (refresh) {
       return;
