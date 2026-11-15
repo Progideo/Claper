@@ -35,7 +35,7 @@ export class Presenter {
       }
 
       this.currentPage = parseInt(data.current_page);
-      this.slider.goTo(data.current_page);
+      this.slider?.goTo(data.current_page);
 
     });
 
@@ -138,7 +138,7 @@ export class Presenter {
       if (e.key == "slide-position") {
         console.log("settings new value " + Date.now())
         this.currentPage = parseInt(e.newValue);
-        this.slider.goTo(e.newValue);
+        this.slider?.goTo(e.newValue);
 
       }
     })
@@ -169,7 +169,7 @@ export class Presenter {
     } else if (newPage !== this.currentPage) {
       // Just a page change — navigate without re-init
       this.currentPage = newPage;
-      this.slider.goTo(newPage);
+      this.slider?.goTo(newPage);
     }
     // Otherwise: unrelated DOM update (e.g. transcription text) — do nothing
   }

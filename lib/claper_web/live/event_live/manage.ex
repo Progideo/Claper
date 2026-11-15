@@ -471,19 +471,7 @@ defmodule ClaperWeb.EventLive.Manage do
       ) do
     page = String.to_integer(page)
 
-    {:ok, new_state} =
-      Claper.Presentations.update_presentation_state(
-        state,
-        %{
-          :position => page
-        }
-      )
-
-    Phoenix.PubSub.broadcast(
-      Claper.PubSub,
-      "event:#{socket.assigns.event.uuid}",
-      {:page_changed, page}
-    )
+    {:ok, new_state} = Presentations.change_page(socket.assigns.event, state, page)
 
     {:noreply,
      socket

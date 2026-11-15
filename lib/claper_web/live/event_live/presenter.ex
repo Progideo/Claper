@@ -8,6 +8,7 @@ defmodule ClaperWeb.EventLive.Presenter do
   alias Claper.Quizzes.Quiz
   alias Claper.WordClouds.WordCloud
   alias Claper.Presentations
+  alias Claper.Interactions
   alias Claper.Transcriptions
 
   @impl true
@@ -57,6 +58,8 @@ defmodule ClaperWeb.EventLive.Presenter do
         )
         |> assign(:event, event)
         |> assign(:iframe, !is_nil(params["iframe"]))
+        |> assign(:goto_position, goto_position(params["goto"], event))
+        |> assign(:goto_used, false)
         |> assign(:state, event.presentation_file.presentation_state)
         |> assign(:posts, list_posts(socket, event.uuid))
         |> assign(:pinned_posts, list_pinned_posts(socket, event.uuid))
@@ -90,6 +93,42 @@ defmodule ClaperWeb.EventLive.Presenter do
     </p>
     """
   end
+
+  defp goto_position(value, event) when is_binary(value) and byte_size(value) <= 10 do
+    with {position, ""} when position >= 0 and position <= 2_147_483_647 <- Integer.parse(value),
+         true <-
+           position < (event.presentation_file.length || 0) or
+             not is_nil(Interactions.get_active_interaction(event, position)) do
+      position
+    else
+      _ -> nil
+    end
+  end
+
+  defp goto_position(_, _), do: nil
+
+  @impl true
+  def handle_event(
+        "goto",
+        _params,
+        %{assigns: %{goto_position: position, goto_used: false}} = socket
+      )
+      when is_integer(position) do
+    %{event: event, state: state} = socket.assigns
+    socket = assign(socket, :goto_used, true)
+
+    if leader?(socket, event) do
+      case Presentations.change_page(event, state, position) do
+        {:ok, %{position: current}} when current == state.position -> {:noreply, socket}
+        {:ok, updated} -> {:noreply, assign_position(socket, updated)}
+        {:error, _} -> {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("goto", _params, socket), do: {:noreply, socket}
 
   defp leader?(%{assigns: %{current_user: current_user}} = _socket, event) do
     Claper.Events.led_by?(current_user.email, event) || event.user.id == current_user.id
@@ -128,14 +167,18 @@ defmodule ClaperWeb.EventLive.Presenter do
 
   @impl true
   def handle_info({:state_updated, state}, socket) do
-    {:noreply,
-     socket
-     |> assign(:state, state)
-     |> push_event("page", %{current_page: state.position})
-     |> push_event("reset-global-react", %{})
-     |> poll_at_position
-     |> embed_at_position
-     |> word_cloud_at_position}
+    if socket.assigns.state.position == state.position do
+      {:noreply,
+       socket
+       |> assign(:state, state)
+       |> push_event("page", %{current_page: state.position})
+       |> push_event("reset-global-react", %{})
+       |> poll_at_position()
+       |> embed_at_position()
+       |> word_cloud_at_position()}
+    else
+      {:noreply, assign_position(socket, state)}
+    end
   end
 
   @impl true
@@ -460,6 +503,18 @@ defmodule ClaperWeb.EventLive.Presenter do
 
   defp apply_action(socket, :show, _params) do
     socket
+  end
+
+  defp assign_position(socket, state) do
+    socket
+    |> assign(:state, state)
+    |> push_event("page", %{current_page: state.position})
+    |> push_event("reset-global-react", %{})
+    |> poll_at_position()
+    |> form_at_position()
+    |> embed_at_position()
+    |> quiz_at_position()
+    |> word_cloud_at_position()
   end
 
   defp poll_at_position(%{assigns: %{event: event, state: state}} = socket) do

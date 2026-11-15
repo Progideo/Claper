@@ -450,6 +450,7 @@ Hooks.UpdateAttendees = {
 Hooks.Presenter = {
   mounted() {
     this.presenter = new Presenter(this);
+    if (this.el.hasAttribute("data-goto-position")) this.pushEvent("goto", {});
     this.presenter.init();
   },
   updated() {

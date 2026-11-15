@@ -258,6 +258,39 @@ defmodule Claper.Presentations do
     |> broadcast(:state_updated)
   end
 
+  @doc "Changes the current page and notifies presentation and attendee views."
+  def change_page(event, state, position) do
+    result =
+      Repo.transaction(fn ->
+        current =
+          Repo.one!(from s in PresentationState, where: s.id == ^state.id, lock: "FOR UPDATE")
+
+        persist_page(current, position)
+      end)
+
+    case result do
+      {:ok, {:changed, updated}} ->
+        broadcast({:ok, updated}, :state_updated)
+        Phoenix.PubSub.broadcast(Claper.PubSub, "event:#{event.uuid}", {:page_changed, position})
+        {:ok, updated}
+
+      {:ok, {:unchanged, current}} ->
+        {:ok, current}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp persist_page(%{position: position} = current, position), do: {:unchanged, current}
+
+  defp persist_page(current, position) do
+    case current |> PresentationState.changeset(%{position: position}) |> Repo.update() do
+      {:ok, updated} -> {:changed, updated}
+      {:error, changeset} -> Repo.rollback(changeset)
+    end
+  end
+
   @interaction_schemas [
     Claper.Polls.Poll,
     Claper.Forms.Form,
