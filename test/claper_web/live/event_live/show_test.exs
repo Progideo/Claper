@@ -9,6 +9,7 @@ defmodule ClaperWeb.EventLive.ShowTest do
     PollsFixtures,
     PostsFixtures,
     PresentationsFixtures,
+    QuizzesFixtures,
     WordCloudsFixtures
   }
 
@@ -48,6 +49,78 @@ defmodule ClaperWeb.EventLive.ShowTest do
 
     assert [["hide", %{"to" => "#identity-menu"}]] = Jason.decode!(close_command)
     assert Floki.attribute(document, "#nicknamepicker", "phx-click") == []
+  end
+
+  test "prioritises the quiz and lets the attendee open messages without losing their answer", %{
+    user: user
+  } do
+    presentation_file = presentation_file_fixture(%{user: user}, [:event])
+    presentation_state_fixture(%{presentation_file: presentation_file, position: 0})
+
+    quiz =
+      quiz_fixture(%{
+        presentation_file: presentation_file,
+        enabled: true,
+        position: 0,
+        quiz_questions: [
+          %{
+            content: "Which options apply?",
+            type: "qcm",
+            quiz_question_opts:
+              for(index <- 1..6, do: %{content: "Option #{index}", is_correct: index == 1})
+          }
+        ]
+      })
+
+    poll_fixture(%{presentation_file_id: presentation_file.id, position: 1})
+    {:ok, attendee, html} = live(build_conn(), ~p"/e/#{presentation_file.event.code}")
+    document = Floki.parse_document!(html)
+
+    assert "grid-rows-[auto_minmax(0,1fr)]" in classes(document, "#attendee-room")
+    assert "overflow-y-auto" in classes(document, "#focus-slot")
+    refute "max-h-[40dvh]" in classes(document, "#focus-slot")
+    assert has_element?(attendee, "#chat-panel[hidden]")
+    assert has_element?(attendee, "#room-composer[hidden]")
+    assert has_element?(attendee, "#extended-quiz", "Option 6")
+
+    opt = quiz.quiz_questions |> hd() |> Map.fetch!(:quiz_question_opts) |> hd()
+    option = ~s(button[phx-value-opt="#{opt.id}"])
+
+    attendee |> element(option) |> render_click()
+    attendee |> element("#attendee-messages-toggle") |> render_click()
+    assert has_element?(attendee, "#attendee-messages-toggle[aria-expanded=true]")
+    assert has_element?(attendee, "#focus-slot[hidden]")
+    assert has_element?(attendee, "#chat-panel:not([hidden])")
+    assert has_element?(attendee, "#room-composer:not([hidden]) #post-form")
+
+    attendee |> element("#attendee-messages-toggle") |> render_click()
+    assert has_element?(attendee, option <> "[aria-pressed=true]")
+    assert has_element?(attendee, "#focus-slot:not([hidden])")
+
+    attendee |> element("#attendee-messages-toggle") |> render_click()
+    send(attendee.pid, {:page_changed, 1})
+    assert has_element?(attendee, "#focus-slot:not([hidden]) #poll-opt-0")
+    assert has_element?(attendee, "#chat-panel[hidden]")
+  end
+
+  test "uses the full activity area without a messages button when discussion is unavailable", %{
+    user: user
+  } do
+    presentation_file = presentation_file_fixture(%{user: user}, [:event])
+
+    presentation_state_fixture(%{
+      presentation_file: presentation_file,
+      position: 0,
+      chat_enabled: false,
+      message_reaction_enabled: false
+    })
+
+    poll_fixture(%{presentation_file_id: presentation_file.id, position: 0})
+    {:ok, attendee, _html} = live(build_conn(), ~p"/e/#{presentation_file.event.code}")
+
+    assert has_element?(attendee, "#focus-slot:not([hidden]) #poll-opt-0")
+    assert has_element?(attendee, "#chat-panel[hidden]")
+    refute has_element?(attendee, "#attendee-messages-toggle")
   end
 
   test "updates reaction controls when message reactions are enabled", %{conn: conn, user: user} do

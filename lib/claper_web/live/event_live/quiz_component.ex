@@ -60,7 +60,7 @@ defmodule ClaperWeb.EventLive.QuizComponent do
           !@focus_mode && "shadow-2xl ring-1 ring-white/10"
         ]}
       >
-        <div class="relative pr-8">
+        <div class={["relative", !@focus_mode && "pr-8"]}>
           <button
             :if={!@focus_mode}
             id="quiz-pane"
@@ -95,7 +95,10 @@ defmodule ClaperWeb.EventLive.QuizComponent do
           <% end %>
         </div>
         <div>
-          <div class="flex max-h-[500px] flex-col gap-2 overflow-y-auto">
+          <div class={[
+            "flex flex-col gap-2",
+            !@focus_mode && "max-h-[500px] overflow-y-auto"
+          ]}>
             <%= if @current_question do %>
               <%= for {opt, _idx} <- Enum.with_index(@current_question.quiz_question_opts) do %>
                 <%= if @is_submitted do %>

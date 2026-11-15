@@ -76,6 +76,13 @@ other and confirm that the final question stays active. Open a `screen=join`
 slide and confirm that it shows the QR code without changing the attendee's
 question.
 
+### Answering on a phone
+
+When a quiz or poll is active, the attendee's screen gives the activity the
+available space. Long questions and answer lists scroll in that area. Attendees
+can open and close the discussion using **Messages**. This choice is local to
+each attendee, and the next slide shows the activity first again.
+
 ## Performance
 
 An embedded presenter loads the current slide, the Claper JavaScript and styles,

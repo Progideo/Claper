@@ -1,29 +1,39 @@
 <%= if @started || @is_leader do %>
-  <% focus_content? =
-    not is_nil(@current_slide_url) ||
-      match?(%Claper.Polls.Poll{}, @current_interaction) ||
-      match?(%Claper.Forms.Form{}, @current_interaction) ||
-      match?(%Claper.Quizzes.Quiz{}, @current_interaction) ||
-      match?(%Claper.WordClouds.WordCloud{}, @current_interaction) ||
-      match?(%Claper.Embeds.Embed{attendee_visibility: true}, @current_interaction) %>
-  <% interaction_mode? =
+  <% prioritise_activity? =
     match?(%Claper.Polls.Poll{}, @current_interaction) ||
+      match?(%Claper.Quizzes.Quiz{}, @current_interaction) %>
+  <% interaction_mode? =
+    prioritise_activity? ||
       match?(%Claper.Forms.Form{}, @current_interaction) ||
-      match?(%Claper.Quizzes.Quiz{}, @current_interaction) ||
       match?(%Claper.WordClouds.WordCloud{}, @current_interaction) ||
       match?(%Claper.Embeds.Embed{attendee_visibility: true}, @current_interaction) %>
+  <% focus_content? = not is_nil(@current_slide_url) || interaction_mode? %>
+  <% messages_available? =
+    @state.chat_enabled || @post_count > 0 || @state.message_reaction_enabled %>
+  <% messages_open? = prioritise_activity? && messages_available? && @attendee_messages_open %>
+  <% activity_only? = prioritise_activity? && !messages_open? %>
+  <% split_content? = focus_content? && !prioritise_activity? %>
   <% captions_visible? =
-    @transcription_config && @transcription_config.enabled &&
+    not is_nil(@transcription_config) && @transcription_config.enabled &&
       @transcription_config.visibility in ["both", "attendee"] %>
   <div class="h-[100dvh] overflow-hidden bg-black lg:bg-primary-700">
     <main
       id="attendee-room"
       class={[
         "relative mx-auto grid h-[100dvh] w-full max-w-lg overflow-hidden bg-black font-display shadow-2xl",
-        focus_content? && captions_visible? &&
-          "grid-rows-[auto_auto_auto_minmax(0,1fr)]",
-        focus_content? != captions_visible? && "grid-rows-[auto_auto_minmax(0,1fr)]",
-        !focus_content? && !captions_visible? && "grid-rows-[auto_minmax(0,1fr)]"
+        cond do
+          activity_only? && captions_visible? ->
+            "grid-rows-[auto_minmax(0,1fr)_auto]"
+
+          split_content? && captions_visible? ->
+            "grid-rows-[auto_auto_auto_minmax(0,1fr)]"
+
+          split_content? || (captions_visible? && !activity_only?) ->
+            "grid-rows-[auto_auto_minmax(0,1fr)]"
+
+          true ->
+            "grid-rows-[auto_minmax(0,1fr)]"
+        end
       ]}
     >
       <div
@@ -132,19 +142,33 @@
               {@attendees_nb}
             </span>
           </div>
+          <button
+            :if={prioritise_activity? && messages_available?}
+            id="attendee-messages-toggle"
+            type="button"
+            phx-click="toggle-attendee-messages"
+            aria-controls="chat-panel room-composer"
+            aria-expanded={to_string(messages_open?)}
+            class="min-h-11 shrink-0 rounded-full border border-white/20 px-3 text-sm font-semibold text-white hover:bg-white/10"
+          >
+            {if messages_open?, do: gettext("Hide messages"), else: gettext("Messages")}
+          </button>
         </div>
       </header>
 
       <section
         :if={focus_content?}
         id="focus-slot"
+        hidden={messages_open?}
         phx-hook="AttendeeFocus"
         data-focus-key={focus_key(@current_interaction, @state.position)}
         data-collapse-key={"focus-slot:#{@event.uuid}"}
         data-interaction-mode={to_string(interaction_mode?)}
         class={[
-          "relative z-10 min-h-0 overflow-hidden border-y border-white/10 bg-gray-950 transition-[height] duration-300",
-          interaction_mode? && "h-auto max-h-[40dvh]",
+          "relative z-10 min-h-0 border-y border-white/10 bg-gray-950 transition-[height] duration-300",
+          prioritise_activity? && "overflow-y-auto overscroll-contain",
+          !prioritise_activity? && "overflow-hidden",
+          interaction_mode? && !prioritise_activity? && "h-auto max-h-[40dvh]",
           !interaction_mode? && "h-[40dvh] min-h-40 max-h-[26rem]"
         ]}
       >
@@ -157,7 +181,7 @@
 
         <%= case @current_interaction do %>
           <% %Claper.Polls.Poll{} -> %>
-            <div class="max-h-[40dvh] overflow-y-auto overscroll-contain p-3">
+            <div class="p-3">
               <.live_component
                 module={ClaperWeb.EventLive.PollComponent}
                 id={"#{@current_interaction.id}-poll"}
@@ -186,7 +210,7 @@
               />
             </div>
           <% %Claper.Quizzes.Quiz{} -> %>
-            <div class="max-h-[40dvh] overflow-y-auto overscroll-contain p-3">
+            <div class="p-3">
               <.live_component
                 module={ClaperWeb.EventLive.QuizComponent}
                 id={"#{@current_interaction.id}-quiz"}
@@ -356,7 +380,11 @@
         </div>
       </section>
 
-      <section id="chat-panel" class="relative min-h-0 overflow-visible bg-black">
+      <section
+        id="chat-panel"
+        hidden={activity_only?}
+        class="relative min-h-0 overflow-visible bg-black"
+      >
         <div
           id="chat-feed"
           class={[
@@ -495,6 +523,7 @@
 
       <footer
         id="room-composer"
+        hidden={activity_only?}
         class="absolute inset-x-0 bottom-0 z-30 bg-transparent px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
       >
         <%= if @state.chat_enabled do %>

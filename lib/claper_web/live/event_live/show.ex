@@ -111,6 +111,7 @@ defmodule ClaperWeb.EventLive.Show do
       socket
       |> assign(:attendees_nb, online_attendees(event))
       |> assign(:post_changeset, post_changeset)
+      |> assign(:attendee_messages_open, false)
       |> assign(:like_posts, reacted_posts(socket, event.id, "👍"))
       |> assign(:love_posts, reacted_posts(socket, event.id, "❤️"))
       |> assign(:lol_posts, reacted_posts(socket, event.id, "😂"))
@@ -246,7 +247,12 @@ defmodule ClaperWeb.EventLive.Show do
         socket
       end
 
-    {:noreply, if(position_changed, do: refresh_current_interaction(socket), else: socket)}
+    if position_changed do
+      {:noreply,
+       socket |> assign(:attendee_messages_open, false) |> refresh_current_interaction()}
+    else
+      {:noreply, socket}
+    end
   end
 
   @impl true
@@ -292,6 +298,7 @@ defmodule ClaperWeb.EventLive.Show do
   def handle_info({:page_changed, page}, socket) do
     {:noreply,
      socket
+     |> update(:attendee_messages_open, &(&1 && socket.assigns.state.position == page))
      |> assign(:current_page, page)
      |> assign(:state, %{socket.assigns.state | position: page})
      |> assign_current_slide(page)
@@ -433,6 +440,11 @@ defmodule ClaperWeb.EventLive.Show do
   @impl true
   def handle_params(params, _url, socket) do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  end
+
+  @impl true
+  def handle_event("toggle-attendee-messages", _params, socket) do
+    {:noreply, update(socket, :attendee_messages_open, &(!&1))}
   end
 
   @impl true
