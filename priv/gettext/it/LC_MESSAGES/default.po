@@ -4101,3 +4101,14 @@ msgid "This event ends automatically after %{count} day without activity."
 msgid_plural "This event ends automatically after %{count} days without activity."
 msgstr[0] "Questo evento termina automaticamente dopo %{count} giorno senza attività."
 msgstr[1] "Questo evento termina automaticamente dopo %{count} giorni senza attività."
+
+#: lib/claper_web/templates/course/not_found.html.heex
+#, elixir-autogen, elixir-format
+msgid "No active event for %{course}"
+msgstr ""
+
+
+#: lib/claper_web/templates/course/not_found.html.heex
+#, elixir-autogen, elixir-format
+msgid "Duplicate the event template for this course in Claper, then reopen this page."
+msgstr ""

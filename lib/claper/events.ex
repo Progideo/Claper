@@ -67,6 +67,24 @@ defmodule Claper.Events do
     |> Repo.preload(preload)
   end
 
+  @doc "Normalizes an event name to its course URL segment."
+  def course_slug(name) do
+    name
+    |> String.downcase()
+    |> String.normalize(:nfd)
+    |> String.replace(~r/\p{M}+/u, "")
+    |> String.replace(~r/[^\p{L}\p{N}]+/u, "-")
+    |> String.trim("-")
+  end
+
+  def find_course_event(_user_id, ""), do: nil
+
+  def find_course_event(user_id, course) do
+    user_id
+    |> list_not_expired_events()
+    |> Enum.find(&String.starts_with?(course_slug(&1.name), course))
+  end
+
   @doc """
   Returns a paginated list of not expired events for a given user.
 

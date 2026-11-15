@@ -93,6 +93,13 @@ defmodule ClaperWeb.Router do
     end
   end
 
+  scope "/", ClaperWeb do
+    pipe_through([:browser, :require_authenticated_user])
+
+    get("/c/:course/presenter", CourseController, :presenter)
+    get("/c/:course/manage", CourseController, :manage)
+  end
+
   live_session :presenter, on_mount: ClaperWeb.UserLiveAuth do
     scope "/", ClaperWeb do
       pipe_through([:browser, :require_authenticated_user])
