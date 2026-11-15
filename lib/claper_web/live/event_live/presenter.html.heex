@@ -9,9 +9,88 @@
   }
 </style>
 
+<%= if @iframe do %>
+  <style>
+    @font-face {
+      font-family: Manrope;
+      src: url('/fonts/Manrope/Manrope.ttf') format('truetype');
+      font-weight: 200 800;
+      font-display: swap;
+    }
+
+    body, #presenter #slides, #presenter #post-list, #presenter #pinned-post-list {
+      background-color: #0B2545;
+      color: #fff;
+      font-family: Manrope, Arial, sans-serif;
+    }
+
+    #presenter #poll, #presenter #word-cloud {
+      padding: 1rem 0;
+      background-color: #0B2545;
+      overflow-y: auto;
+    }
+
+    #presenter #poll > div, #presenter #word-cloud > div {
+      width: 80%;
+    }
+
+    #presenter #poll p {
+      margin-bottom: 1.25rem;
+    }
+
+    #presenter #poll .rounded-3xl {
+      border-radius: 14px;
+      background-color: #1C3A63;
+    }
+
+    #presenter #poll .rounded-3xl > .rounded-3xl {
+      background-color: #FDC500;
+    }
+
+    #presenter #poll .z-10 {
+      color: #fff;
+      background-color: #0B2545;
+      border-radius: 6px;
+      padding: 0 0.35rem;
+      overflow-wrap: anywhere;
+    }
+
+    #presenter[data-join-only] {
+      position: relative;
+      min-height: 100vh;
+    }
+
+    #presenter[data-join-only] > :not(#joinScreen) {
+      display: none;
+    }
+
+    #presenter #joinScreen > div {
+      gap: clamp(0.35rem, 2vh, 1rem);
+      padding: 0.5rem;
+      background-color: #EAF0F7;
+      color: #0B2545;
+    }
+
+    #presenter #joinScreen span {
+      font-size: clamp(1rem, 5vh, 1.65rem);
+      margin-bottom: 0;
+    }
+
+    #presenter #qr {
+      margin-bottom: 0;
+    }
+
+    #presenter #joinScreen canvas {
+      max-height: 48vh;
+      max-width: 48vh;
+    }
+  </style>
+<% end %>
+
 <div
   id="presenter"
-  phx-hook="Presenter"
+  data-join-only={if @join_only, do: "true"}
+  phx-hook={if !@join_only, do: "Presenter"}
   data-max-page={@event.presentation_file.length || 0}
   data-hash={@event.presentation_file.hash}
   data-goto-position={@goto_position}
@@ -21,7 +100,7 @@
   <!-- JOIN SCREEN -->
   <div
     id="joinScreen"
-    class={"#{if @state.join_screen_visible && !(@iframe && @goto_position == @state.position), do: "opacity-100 z-40", else: "opacity-0 pointer-events-none"} h-full w-full flex flex-col justify-center bg-black absolute transition-opacity"}
+    class={"#{if @join_only || (@state.join_screen_visible && !(@iframe && @goto_position == @state.position)), do: "opacity-100 z-40", else: "opacity-0 pointer-events-none"} h-full w-full flex flex-col justify-center bg-black absolute transition-opacity"}
   >
     <div class="h-full bg-white text-black text-center flex flex-col items-center justify-center">
       <span class="font-semibold mb-10 sm:text-3xl md:text-4xl lg:text-6xl">
@@ -302,6 +381,7 @@
 </div>
 <!-- TRANSCRIPTION SUBTITLES (outside #presenter to avoid slider re-init on text updates) -->
 <div
+  :if={!@join_only}
   id="transcription-subtitles"
   class="fixed z-50 bottom-16 left-1/2 transform -translate-x-1/2 max-w-3xl w-full px-4"
 >

@@ -29,7 +29,10 @@ defmodule ClaperWeb.EventLive.Presenter do
        |> put_flash(:error, gettext("Event doesn't exist"))
        |> redirect(to: "/")}
     else
-      if connected?(socket) do
+      iframe = not is_nil(params["iframe"])
+      join_only = iframe and params["screen"] == "join"
+
+      if connected?(socket) and not join_only do
         Claper.Events.Event.subscribe(event.uuid)
         Claper.Presentations.subscribe(event.presentation_file.id)
         Claper.Events.record_event_activity(event)
@@ -57,8 +60,12 @@ defmodule ClaperWeb.EventLive.Presenter do
           host
         )
         |> assign(:event, event)
-        |> assign(:iframe, !is_nil(params["iframe"]))
-        |> assign(:goto_position, goto_position(params["goto"], event))
+        |> assign(:iframe, iframe)
+        |> assign(:join_only, join_only)
+        |> assign(
+          :goto_position,
+          if(join_only, do: nil, else: goto_position(params["goto"], event))
+        )
         |> assign(:goto_used, false)
         |> assign(:state, event.presentation_file.presentation_state)
         |> assign(:posts, list_posts(socket, event.uuid))
