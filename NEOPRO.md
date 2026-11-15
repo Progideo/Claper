@@ -45,6 +45,57 @@ The embedded QR screen uses the attendee URL and leaves the shared page and
 visibility settings alone. The `screen=join` option takes priority over `goto`
 when embedded.
 
+## Performance
+
+An embedded presenter loads the current slide, the Claper JavaScript and styles,
+and Manrope. A valid `goto` selects the initial image directly. LiveView
+replaces that image as the shared position changes. The embedded join screen
+loads the QR code without presentation images. The regular presenter keeps its
+full slide carousel.
+
+The production build generates fingerprinted assets with Phoenix. URLs ending
+in `?vsn=d` carry a one-year browser cache with `immutable`. The same policy
+applies to numbered JPG slides under `/uploads/<hash>/` because a new conversion
+uses a new path. Thumbnails and ordinary asset URLs retain ETag revalidation.
+A cached slide remains usable until its cache entry expires or is cleared.
+Leave cache headers for S3-hosted presentations to the S3 or CDN configuration.
+
+Plug serves precompressed gzip assets from `phx.digest`. The Docker builder also
+precompresses JavaScript, CSS and TrueType fonts with the Brotli command-line
+tool. Plug serves the Brotli variant when the browser accepts it, with gzip as a
+fallback. This uses no additional dependency in the running container.
+
+When a course session cannot be resolved, the page shows the signed-in email.
+**Switch account** clears that Claper session and returns to the same course URL
+and query string after sign-in.
+
+For example, add the cache zone to nginx's `http` block and the location to the
+existing Claper virtual host. Keep application routes and the LiveView WebSocket
+on the existing proxy configuration. Substitute the address of the Claper
+upstream if it runs on a different host or port.
+
+```nginx
+# In http:
+proxy_cache_path /var/cache/nginx/claper levels=1:2 keys_zone=claper_static:10m
+                 max_size=1g inactive=7d use_temp_path=off;
+
+# In the Claper server block:
+location ~ ^/(assets|fonts|uploads)/ {
+    proxy_pass http://127.0.0.1:4000;
+    proxy_set_header Host $host;
+    proxy_set_header Accept-Encoding $http_accept_encoding;
+    proxy_cache claper_static;
+    proxy_cache_lock on;
+    gzip on;
+    gzip_vary on;
+    gzip_types application/javascript text/javascript text/css font/ttf;
+}
+```
+
+The proxy respects the origin's freshness and encoding headers. Include the
+query string in the cache key and preserve `Vary: Accept-Encoding` when adapting
+this example.
+
 ## Build and publish
 
 ```sh
@@ -79,12 +130,16 @@ the standard presenter in PowerPoint or a browser before tagging the image.
 - `.github/workflows/elixir.yml`
 - `assets/js/app.js`
 - `assets/js/presenter.js`
+- `Dockerfile`
 - `lib/claper/events.ex`
 - `lib/claper/presentations.ex`
 - `lib/claper_web/live/event_live/manage.ex`
 - `lib/claper_web/live/event_live/presenter.ex`
 - `lib/claper_web/live/event_live/presenter.html.heex`
+- `lib/claper_web/controllers/user_auth.ex`
+- `lib/claper_web/endpoint.ex`
 - `lib/claper_web/router.ex`
+- `lib/claper_web/templates/layout/{admin,root,user}.html.heex`
 - Gettext catalogs for the course error page
 
 Manrope is served locally. Its font files are distributed under the bundled
